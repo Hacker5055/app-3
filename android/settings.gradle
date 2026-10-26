@@ -14,6 +14,20 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+
+    // The Gradle Plugin Portal no longer serves the marker artifact for
+    // org.jetbrains.kotlin.Android 1.8.22 (the Flutter 3.24 template
+    // version), which makes settings evaluation fail with "plugin not
+    // found". Map the plugin id directly to its implementation module,
+    // which is published on Maven Central (verified:
+    // org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22).
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'org.jetbrains.kotlin.Android') {
+                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${requested.version}")
+            }
+        }
+    }
 }
 
 plugins {
