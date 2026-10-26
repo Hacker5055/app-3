@@ -131,7 +131,6 @@ lib/
 └── ui/
     ├── audit_dashboard.dart         AuditDashboard (single-screen experience)
     ├── fg_icons.dart                Feather icon semantic map
-    ├── feather_icons.dart           Vendored Feather codepoints (280 icons, MIT)
     └── widgets/
         ├── glass_card.dart          Liquid Glass surface + ambient glow field
         ├── glass_search_bar.dart    Floating search with type-morphing icon
@@ -139,6 +138,8 @@ lib/
         ├── exposure_grid.dart       Leaked-data-type glass grid
         ├── breach_timeline_card.dart Vertical breach timeline in one glass container
         └── scanner_overlay.dart     Radar-sweep scanner + live terminal log
+assets/fonts/feather.ttf             Vendored Feather icon font (no pub icon package is
+                                     compatible with both Dart 3 and Flutter 3.24)
 data/platforms.json                  Single source of truth for the platform DB
 tools/gen_platforms.mjs              Regenerates Dart + JS platform DBs from the JSON
 tools/verify_engine.mjs              Offline proof of hashing/scoring/classification (Node)

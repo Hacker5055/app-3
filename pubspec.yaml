@@ -15,8 +15,10 @@ dependencies:
   http: ^1.2.2
   crypto: ^3.0.3
 
-  # Premium thin-stroke iconography (Feather Icons) — NO EMOJIS anywhere in UI.
-  feather_icons: ^1.5.0
+  # Premium thin-stroke iconography: Feather Icons font is VENDORED
+  # (assets/fonts/feather.ttf + lib/ui/feather_icons.dart) because no pub
+  # release of feather_icons/lucide_icons is compatible with both Dart 3
+  # and the pinned Flutter 3.24 toolchain. NO EMOJIS anywhere in UI.
 
   # Typography: Cairo (Arabic) + Inter (Latin), light/medium weights.
   google_fonts: ^6.2.1
