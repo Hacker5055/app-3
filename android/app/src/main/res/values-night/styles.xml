@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="@Android:style/Theme.Black.NoTitleBar">
+        <item name="Android:windowBackground">@drawable/launch_background</item>
+        <item name="Android:statusBarColor">#000000</item>
+        <item name="Android:navigationBarColor">#000000</item>
+    </style>
+    <style name="NormalTheme" parent="@Android:style/Theme.Black.NoTitleBar">
+        <item name="Android:windowBackground">#000000</item>
+        <item name="Android:statusBarColor">#000000</item>
+        <item name="Android:navigationBarColor">#000000</item>
+    </style>
+</resources>
