@@ -59,14 +59,8 @@ jobs:
       - name: Build release APK (ARM64 / arm64-v8a only)
         run: |
           set -o pipefail
-          {
-            echo "=== DEBUG: workspace ==="; pwd; ls -la
-            echo "=== DEBUG: android tree ==="; find android -maxdepth 4 | sort | head -60
-            echo "=== DEBUG: manifest ==="; cat android/app/src/main/AndroidManifest.xml
-            echo "=== DEBUG: flutter build (verbose) ==="
-            flutter build apk --release --target-platform android-arm64 \
-              --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }} --verbose
-          } 2>&1 | tee build.log
+          flutter build apk --release --target-platform android-arm64 \
+            --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }} 2>&1 | tee build.log
           cp build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk
           ls -lh build/app/outputs/flutter-apk/
@@ -97,3 +91,15 @@ jobs:
           name: FootprintGuard-ARM64-APK
           path: build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk
           retention-days: 30
+
+      - name: Publish GitHub Release (v1.0.0)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view v1.0.0 >/dev/null 2>&1; then
+            gh release create v1.0.0 \
+              --title "Footprint Guard v1.0.0" \
+              --notes "OSINT and Digital Footprint Audit for ARM64 devices (API 24+). Privacy-first: on-device SHA-1 k-Anonymity for password checks, HIBP API v3 breach lookup with a personal key, username recon across 60 platforms, social-engineering threat scoring and PDF/Markdown reports. Mock Audit Mode is ON by default (no API key needed). CI artifact is debug-signed for evaluation; build from source with your own keystore for production."
+          fi
+          gh release upload v1.0.0 \
+            build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk --clobber
