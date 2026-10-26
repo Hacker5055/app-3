@@ -38,22 +38,47 @@ jobs:
         run: node tools/verify_engine.mjs
 
       - name: flutter pub get
-        run: flutter pub get
+        run: |
+          set -o pipefail
+          flutter pub get 2>&1 | tee pubget.log
 
       - name: flutter analyze (non-blocking report)
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee analyze.log
         continue-on-error: true
 
       - name: flutter test
-        run: flutter test
+        run: |
+          set -o pipefail
+          flutter test 2>&1 | tee test.log
 
       - name: Build release APK (ARM64 / arm64-v8a only)
         run: |
+          set -o pipefail
           flutter build apk --release --target-platform android-arm64 \
-            --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }}
+            --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }} 2>&1 | tee build.log
           cp build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk
           ls -lh build/app/outputs/flutter-apk/
+
+      # Job-summary diagnostics (readable via the check-runs API even where
+      # raw log downloads are unavailable).
+      - name: Publish diagnostics to job summary
+        if: always()
+        run: |
+          {
+            echo "## Footprint Guard CI diagnostics"
+            for f in pubget.log analyze.log test.log build.log; do
+              if [ -f "$f" ]; then
+                echo ""
+                echo "### $f (tail)"
+                echo '```text'
+                tail -c 5000 "$f" | sed 's/`/'"'"'/g'
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

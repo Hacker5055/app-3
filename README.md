@@ -131,6 +131,7 @@ lib/
 └── ui/
     ├── audit_dashboard.dart         AuditDashboard (single-screen experience)
     ├── fg_icons.dart                Feather icon semantic map
+    ├── feather_icons.dart           Vendored Feather codepoints (280 icons, MIT)
     └── widgets/
         ├── glass_card.dart          Liquid Glass surface + ambient glow field
         ├── glass_search_bar.dart    Floating search with type-morphing icon

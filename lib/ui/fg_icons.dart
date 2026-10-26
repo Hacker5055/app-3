@@ -1,8 +1,10 @@
-import 'package:feather_icons/feather_icons.dart';
 import 'package:flutter/widgets.dart';
 
+import 'feather_icons.dart';
+
 /// Footprint Guard iconography.
-/// Feather Icons — premium thin-stroke line icons only.
+/// Feather Icons (vendored font, see feather_icons.dart) — premium
+/// thin-stroke line icons only.
 /// STRICT RULE: no emojis anywhere in this application.
 class FGI {
   static const IconData shield = FeatherIcons.shield;
