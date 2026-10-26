@@ -61,8 +61,8 @@ jobs:
           set -o pipefail
           {
             echo "=== DEBUG: workspace ==="; pwd; ls -la
-            echo "=== DEBUG: android tree ==="; find Android -maxdepth 4 | sort | head -60
-            echo "=== DEBUG: manifest ==="; cat Android/app/src/main/AndroidManifest.xml
+            echo "=== DEBUG: android tree ==="; find android -maxdepth 4 | sort | head -60
+            echo "=== DEBUG: manifest ==="; cat android/app/src/main/AndroidManifest.xml
             echo "=== DEBUG: flutter build (verbose) ==="
             flutter build apk --release --target-platform android-arm64 \
               --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }} --verbose

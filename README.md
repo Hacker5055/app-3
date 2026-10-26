@@ -146,7 +146,7 @@ tools/verify_engine.mjs              Offline proof of hashing/scoring/classifica
 tools/gen_icons.py                   Launcher icon generation (radar mark, stdlib PNG)
 test/                                Dart unit tests (privacy, risk, range-parse, OSINT eval, DB)
 web_preview/                         Interactive web replica (real browser k-Anonymity call)
-Android/                             Flutter 3.24 Android project, arm64-v8a, minSdk 24
+android/                             Flutter 3.24 Android project, arm64-v8a, minSdk 24
 .github/workflows/build-apk.yml      CI: verify → pub get → analyze → test → release APK
 ```
 
@@ -177,7 +177,7 @@ flutter test
 node tools/verify_engine.mjs
 ```
 
-**Production signing:** create `Android/key.properties` (git-ignored) —
+**Production signing:** create `android/key.properties` (git-ignored) —
 
 ```properties
 storePassword=…
@@ -186,7 +186,7 @@ keyAlias=…
 storeFile=/absolute/path/upload-keystore.jks
 ```
 
-`Android/app/build.gradle` picks it up automatically; without it, release builds fall
+`android/app/build.gradle` picks it up automatically; without it, release builds fall
 back to the debug key (fine for CI/evaluation, **not** for Play Store).
 
 **Getting a HIBP key:** https://haveibeenpwned.com/API/Key (needed only for live email

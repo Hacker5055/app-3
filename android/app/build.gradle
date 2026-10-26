@@ -15,7 +15,7 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-Android {
+android {
     namespace = "com.footprintguard.footprint_guard"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

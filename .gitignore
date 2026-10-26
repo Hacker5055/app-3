@@ -14,7 +14,7 @@ build/
 # NOTE: .metadata IS version-controlled (Flutter tool requires it).
 
 # Android
-**/Android/local.properties
+**/android/local.properties
 local.properties
 *.jks
 *.keystore
