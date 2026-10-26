@@ -7,6 +7,9 @@
 ### مسح الأثر الرقمي والهندسة الاجتماعية
 
 **OSINT & Digital Footprint Audit for Android** — breach exposure (Have I Been Pwned),
+
+[![Build APK](https://github.com/Hacker5055/app-3/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Hacker5055/app-3/actions/workflows/build-apk.yml) [![Latest release](https://img.shields.io/github/v/release/Hacker5055/app-3?label=APK%20release)](https://github.com/Hacker5055/app-3/releases)
+
 username recon across **60 platforms**, a transparent **Social Engineering Threat Score**,
 and a prioritized remediation plan. Privacy-first by design: **k-Anonymity SHA-1 hashing
 on-device, zero custom servers, zero storage, zero tracking.**
@@ -55,7 +58,9 @@ morphs its icon), then Footprint Guard runs a five-stage audit with a radar-swee
 
 ## Get the APK
 
-Every push builds a release APK in GitHub Actions
+**Fastest:** grab `FootprintGuard-v1.0.0-arm64-v8a.apk` from the [v1.0.0 GitHub Release](https://github.com/Hacker5055/app-3/releases/tag/v1.0.0).
+
+Every push also builds a release APK in GitHub Actions
 (`.github/workflows/build-apk.yml`, Flutter 3.24.5, JDK 17):
 
 1. Open the repo **Actions** tab → latest *Build Footprint Guard APK (ARM64)* run.
