@@ -1,0 +1,105 @@
+name: Build Footprint Guard APK (ARM64)
+
+permissions:
+  contents: write # only used for the ci-diagnostics log branch on failure
+
+on:
+  push:
+    branches: [main, "arena/**"]
+  workflow_dispatch:
+    inputs:
+      hibp_api_key:
+        description: "Optional HIBP API key baked in at build time (leave empty to use in-app key field)"
+        required: false
+        default: ""
+
+env:
+  FLUTTER_VERSION: "3.24.5"
+
+jobs:
+  build:
+    name: Release APK · android-arm64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Verify offline engine math (Node mirror)
+        run: node tools/verify_engine.mjs
+
+      - name: flutter pub get
+        run: |
+          set -o pipefail
+          flutter pub get 2>&1 | tee pubget.log
+
+      - name: flutter analyze (non-blocking report)
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee analyze.log
+        continue-on-error: true
+
+      - name: flutter test
+        run: |
+          set -o pipefail
+          flutter test 2>&1 | tee test.log
+
+      - name: Build release APK (ARM64 / arm64-v8a only)
+        run: |
+          set -o pipefail
+          flutter build apk --release --target-platform android-arm64 \
+            --dart-define=HIBP_API_KEY=${{ github.event.inputs.hibp_api_key }} 2>&1 | tee build.log
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk
+          ls -lh build/app/outputs/flutter-apk/
+
+      # Diagnostics: on failure, push full step logs to the ci-diagnostics
+      # branch (readable via the GitHub API even where raw Actions log
+      # downloads are unavailable). That branch never triggers this workflow.
+      - name: Push failure logs to ci-diagnostics branch
+        if: failure()
+        run: |
+          git config user.name "ci-diagnostics"
+          git config user.email "ci@users.noreply.github.com"
+          mkdir -p /tmp/ci-logs
+          for f in pubget.log analyze.log test.log build.log; do
+            [ -f "$f" ] && tail -c 600000 "$f" > "/tmp/ci-logs/$f" || true
+          done
+          echo "run ${{ github.run_id }} sha ${{ github.sha }} job-status failure" > /tmp/ci-logs/RUN.txt
+          git checkout --orphan ci-diagnostics-tmp
+          git rm -rf --cached . >/dev/null 2>&1 || true
+          mkdir -p ci-logs && cp -f /tmp/ci-logs/* ci-logs/ 2>/dev/null || true
+          git add -f ci-logs
+          git commit -m "CI failure logs — run ${{ github.run_id }}"
+          git push -f origin HEAD:ci-diagnostics
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FootprintGuard-ARM64-APK
+          path: build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release (v1.0.0)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view v1.0.0 >/dev/null 2>&1; then
+            gh release create v1.0.0 \
+              --title "Footprint Guard v1.0.0" \
+              --notes "OSINT and Digital Footprint Audit for ARM64 devices (API 24+). Privacy-first: on-device SHA-1 k-Anonymity for password checks, HIBP API v3 breach lookup with a personal key, username recon across 60 platforms, social-engineering threat scoring and PDF/Markdown reports. Mock Audit Mode is ON by default (no API key needed). CI artifact is debug-signed for evaluation; build from source with your own keystore for production."
+          fi
+          gh release upload v1.0.0 \
+            build/app/outputs/flutter-apk/FootprintGuard-v1.0.0-arm64-v8a.apk --clobber

@@ -1,0 +1,41 @@
+name: footprint_guard
+description: "Footprint Guard — OSINT & Digital Footprint Audit (مسح الأثر الرقمي والهندسة الاجتماعية). Privacy-first breach lookup (k-Anonymity SHA-1), username recon across 60 platforms, social-engineering threat scoring and remediation planning."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Networking + local hashing (k-Anonymity). No analytics, no tracking SDKs.
+  http: ^1.2.2
+  crypto: ^3.0.3
+
+  # Premium thin-stroke iconography: Feather Icons font is VENDORED
+  # (assets/fonts/feather.ttf + lib/ui/feather_icons.dart) because no pub
+  # release of feather_icons/lucide_icons is compatible with both Dart 3
+  # and the pinned Flutter 3.24 toolchain. NO EMOJIS anywhere in UI.
+
+  # Typography: Cairo (Arabic) + Inter (Latin), light/medium weights.
+  google_fonts: ^6.2.1
+
+  # Professional exposure-report export.
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: FeatherIcons
+      fonts:
+        - asset: assets/fonts/feather.ttf

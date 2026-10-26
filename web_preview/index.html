@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Footprint Guard — Interactive Preview</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="platforms.js"></script>
+<style>
+:root{
+  --black:#000000; --glass:rgba(255,255,255,.075); --glass2:rgba(255,255,255,.11);
+  --border:rgba(255,255,255,.17); --border2:rgba(255,255,255,.09);
+  --tx:#F5F7FA; --txm:#A7B0BE; --txl:#6B7686;
+  --em:#00FFA3; --emd:#00C97E; --amb:#FFC24B; --org:#FF8A3D; --crim:#FF3B30;
+  --glow:rgba(0,255,163,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#000}
+body{background:var(--black);color:var(--tx);font-family:'Cairo','Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+html[lang="en"] body{font-family:'Inter','Cairo',system-ui,sans-serif}
+.glowfield{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.glow{position:absolute;border-radius:50%;filter:blur(2px);transition:background 1.2s}
+.g1{width:440px;height:440px;top:-170px;inset-inline-end:-110px;background:radial-gradient(circle,var(--glow),transparent 65%)}
+.g2{width:480px;height:480px;bottom:-210px;inset-inline-start:-130px;background:radial-gradient(circle,rgba(43,75,255,.06),transparent 65%)}
+.g3{width:360px;height:360px;top:340px;inset-inline-start:-180px;background:radial-gradient(circle,var(--glow),transparent 65%);opacity:.5}
+.previewbar{position:relative;z-index:2;text-align:center;padding:10px 14px;font-size:11px;letter-spacing:.4px;color:var(--txl);border-bottom:1px solid var(--border2);background:rgba(255,255,255,.03);backdrop-filter:blur(14px)}
+.previewbar b{color:var(--emd);font-weight:600}
+.app{position:relative;z-index:1;max-width:470px;margin:0 auto;padding:18px 20px 40px}
+@media(min-width:900px){.app{max-width:520px}}
+svg.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.ic.sm{width:15px;height:15px}svg.ic.xs{width:12px;height:12px}
+.glass{background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.03) 45%,rgba(255,255,255,.05));border:1px solid var(--border);border-radius:22px;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.09)}
+header{display:flex;align-items:center;gap:12px}
+.orb{width:46px;height:46px;border-radius:50%;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--em);box-shadow:0 0 24px rgba(0,255,163,.15)}
+.orb img{width:44px;height:44px;border-radius:50%}
+h1.logo{font-size:17px;font-weight:600;line-height:1.2}
+.tagline{font-size:10.5px;color:var(--txl)}
+.hgroup{margin-inline-start:auto;display:flex;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:var(--glass);border:1px solid var(--border2);font-size:10.5px;color:var(--txm);line-height:1.25;white-space:nowrap}
+.chip.amber{color:var(--amb);border-color:rgba(255,194,75,.4)} .chip.em{color:var(--emd);border-color:rgba(0,201,126,.4)}
+.chip.crim{color:var(--crim);border-color:rgba(255,59,48,.4)}
+.langbtn{cursor:pointer;padding:7px 13px;border-radius:99px;background:var(--glass);border:1px solid var(--border);color:var(--tx);font-size:12px;font-weight:600;font-family:inherit}
+.hero{margin-top:26px}
+.hero h2{font-size:27px;font-weight:300;line-height:1.25}
+.hero p{margin-top:8px;font-size:13.5px;color:var(--txm);line-height:1.65;font-weight:400}
+.hero .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.searchbar{margin-top:20px;border-radius:30px;padding:6px 8px;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.05))}
+.searchbar .sic{color:var(--em);display:flex;margin-inline-start:6px;transition:transform .2s}
+.searchbar input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-size:15px;font-family:inherit;min-width:0}
+.searchbar input::placeholder{color:var(--txl);font-size:13.5px}
+.kindchip{display:none}
+.gobtn{width:43px;height:43px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--em),var(--emd));color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 18px rgba(0,255,163,.35);flex:none}
+.gobtn:active{transform:scale(.94)}
+.gobtn:disabled{opacity:.55}
+.kanon{display:flex;gap:6px;align-items:flex-start;margin-top:10px;font-size:11px;color:var(--txl);line-height:1.5}
+.sec{margin-top:28px}
+.sechead{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--txm)}
+.sechead .t{font-size:10.5px;letter-spacing:2.2px;font-weight:600;color:var(--txl);text-transform:uppercase;white-space:nowrap}
+html[lang="ar"] .sechead .t{letter-spacing:.4px;font-size:12px}
+.sechead .rule{flex:1;height:1px;background:var(--border2)}
+.sechead .tr{font-size:11px;color:var(--txl)}
+.gaugecard{padding:18px 20px 20px;border-radius:28px}
+.idrow{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--txm)}
+.idrow .mono{font-family:ui-monospace,Menlo,monospace;color:var(--tx);font-size:12.5px;direction:ltr}
+.gaugewrap{display:flex;justify-content:center;margin-top:4px}
+.stats{display:flex;align-items:stretch;margin-top:6px}
+.stat{flex:1;text-align:center}
+.stat .n{font-size:18px;font-weight:500}
+.stat .l{font-size:10.5px;color:var(--txl)}
+.stat svg{color:var(--txm);margin-bottom:3px}
+.vdiv{width:1px;background:var(--border2);margin:4px 0}
+.bar{margin-top:13px}
+.bar .lr{display:flex;justify-content:space-between;font-size:11.5px;color:var(--txl)}
+.bar .v{font-family:ui-monospace,monospace;color:var(--txm)}
+.track{height:4px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}
+.fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.25,1)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 16px;border-radius:16px;border:1px solid var(--border);background:var(--glass);color:var(--tx);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;width:100%}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:linear-gradient(135deg,var(--em),var(--emd));color:#000;border:none;box-shadow:0 0 18px rgba(0,255,163,.25)}
+.btnrow{display:flex;gap:10px}.btnrow .btn{flex:1}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.exp{padding:12px;border-radius:18px;min-height:104px;display:flex;flex-direction:column}
+.exp .dot{width:6px;height:6px;border-radius:50%;position:absolute;top:0;inset-inline-end:0}
+.exp .icw{position:relative;width:fit-content}
+.exp .nm{margin-top:auto;font-size:11.5px;font-weight:500;line-height:1.3}
+.exp .st{font-size:9.5px;margin-top:3px}
+.timeline{padding:18px 16px 8px}
+.tl{display:flex;gap:10px}
+.rail{width:22px;display:flex;flex-direction:column;align-items:center}
+.rail .pt{width:10px;height:10px;border-radius:50%;border:1.6px solid var(--txm);background:#000;margin-top:5px;flex:none}
+.rail .ln{flex:1;width:1px;background:var(--border);margin:4px 0}
+.tlbody{flex:1;padding-bottom:22px;min-width:0}
+.tl:last-child .tlbody{padding-bottom:10px}
+.tlhead{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.tlhead .bt{font-size:15px;font-weight:500}
+.tlchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tldesc{font-size:11.5px;color:var(--txl);line-height:1.55;margin-top:8px}
+.platcard{padding:4px 16px}
+.prow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border2)}
+.prow:last-child{border-bottom:none}
+.pico{width:37px;height:37px;border-radius:11px;background:var(--glass);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--tx)}
+.pname{font-size:13.5px;font-weight:500}
+.purl{font-size:10px;color:var(--txl);font-family:ui-monospace,monospace;direction:ltr;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+html[dir="rtl"] .purl{text-align:right}
+.pmeta{flex:1;min-width:0}
+.rem{display:flex;gap:12px;padding:16px;margin-bottom:10px;align-items:flex-start}
+.rem .stripe{width:3px;align-self:stretch;border-radius:99px;flex:none}
+.rem .ric{width:39px;height:39px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid}
+.rem .pri{font-size:9.5px;letter-spacing:1.8px;font-weight:700}
+.rem h4{font-size:14px;font-weight:500;line-height:1.4;margin-top:3px}
+.rem p{font-size:12px;color:var(--txm);line-height:1.6;margin-top:4px}
+.rem .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rem .rb{flex:1;min-width:0}
+.cardpad{padding:18px}
+.field{display:flex;gap:10px}
+.inp{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:15px;padding:0 13px;color:var(--txm);min-width:0}
+.inp input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit;padding:13px 0;min-width:0}
+.inp input::placeholder{color:var(--txl)}
+.pwres{margin-top:14px;padding:13px;border-radius:14px;border:1px solid;display:flex;gap:10px;align-items:flex-start}
+.pwres .big{font-size:13px;font-weight:600}
+.pwres .mono{font-size:11px;color:var(--txm);font-family:ui-monospace,monospace;direction:ltr}
+.setrow{display:flex;align-items:center;gap:12px}
+.setrow .sb{flex:1}
+.setrow .st1{font-size:14px;font-weight:500}
+.setrow .st2{font-size:11.5px;color:var(--txl);line-height:1.5}
+.sw{position:relative;width:50px;height:29px;flex:none;cursor:pointer}
+.sw input{display:none}
+.sw .tr{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.15);transition:.25s}
+.sw .th{position:absolute;top:3.5px;inset-inline-start:4px;width:22px;height:22px;border-radius:50%;background:#A7B0BE;transition:.25s}
+.sw input:checked~.tr{background:rgba(0,255,163,.25)}
+.sw input:checked~.th{transform:translateX(-20px);background:var(--em)}
+html[dir="ltr"] .sw input:checked~.th{transform:translateX(20px)}
+.langchips{display:flex;gap:8px}
+.lchip{padding:7px 15px;border-radius:99px;border:1px solid var(--border2);background:var(--glass);font-size:12px;font-weight:600;color:var(--txm);cursor:pointer;font-family:inherit}
+.lchip.on{color:var(--em);border-color:var(--em);background:rgba(0,255,163,.1)}
+.lbl{font-size:10.5px;letter-spacing:1.6px;font-weight:600;color:var(--txl);text-transform:uppercase;margin:18px 0 8px}
+html[lang="ar"] .lbl{letter-spacing:.3px;font-size:12px}
+.note{font-size:11.5px;color:var(--txl);line-height:1.6}
+.err{margin-top:14px;padding:16px;border-color:rgba(255,59,48,.5);display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--txm)}
+.warn{padding:14px 16px;border-color:rgba(255,194,75,.45);display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+footer{margin-top:26px;text-align:center}
+footer .note{max-width:400px;margin:0 auto}
+.ver{font-size:10px;color:var(--txl);margin-top:9px;letter-spacing:.5px}
+/* Scanner overlay */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:22px}
+.overlay.show{display:flex}
+.scan{width:100%;max-width:400px;padding:26px 24px 22px;border-radius:28px;text-align:center}
+.radar{position:relative;width:168px;height:168px;margin:0 auto;border-radius:50%;border:1px solid var(--border);overflow:hidden;background:rgba(0,0,0,.45)}
+.radar::before,.radar::after{content:"";position:absolute;border:1px solid var(--border2);border-radius:50%}
+.radar::before{inset:27px}.radar::after{inset:56px}
+.sweep{position:absolute;inset:0;background:conic-gradient(from 0deg,rgba(0,255,163,.4),rgba(0,255,163,.05) 70deg,transparent 90deg);animation:spin 2.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.radar .cross{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--em);z-index:2}
+.radar .ax{position:absolute;background:var(--border2)}
+.blip{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--em);animation:blip 2.5s infinite}
+@keyframes blip{0%{opacity:1;box-shadow:0 0 10px var(--em)}60%{opacity:.25;box-shadow:none}100%{opacity:.2}}
+.scan .sl{margin-top:18px;font-size:11px;letter-spacing:3px;font-weight:600;color:var(--em)}
+.scan .stg{margin-top:6px;font-size:13.5px;color:var(--txm);min-height:22px}
+.pbar{height:3px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:16px;overflow:hidden}
+.pfill{height:100%;background:var(--em);width:0;transition:width .3s}
+.pct{font-family:ui-monospace,monospace;font-size:12px;color:var(--txm);margin-top:8px}
+.log{margin-top:14px;background:rgba(0,0,0,.5);border:1px solid var(--border2);border-radius:14px;padding:11px 12px;text-align:left;direction:ltr;min-height:96px}
+.log div{font-family:ui-monospace,monospace;font-size:10px;color:#8FE9C4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.7}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:#14161B;border:1px solid var(--border);color:var(--tx);padding:12px 18px;border-radius:14px;font-size:13px;z-index:99;opacity:0;pointer-events:none;transition:.3s;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hidden{display:none!important}
+/* Print = PDF report (printer-friendly, high contrast) */
+#printReport{display:none}
+@media print{
+  body>*{display:none!important}
+  #printReport{display:block!important;color:#111318;font-family:'Inter',Arial,sans-serif;padding:8px}
+  #printReport h1{font-size:19px;letter-spacing:1px}
+  #printReport h2{font-size:13.5px;margin:20px 0 8px;border-bottom:1.4px solid #111318;padding-bottom:5px}
+  #printReport table{width:100%;border-collapse:collapse;font-size:10.5px}
+  #printReport th,#printReport td{border:.6px solid #D9DDE3;padding:5px 7px;text-align:left}
+  #printReport th{background:#F2F4F7}
+  #printReport .score{font-size:26px;font-weight:700}
+  #printReport .small{font-size:9.5px;color:#5A6068}
+  #printReport .rem{border-left:2.5px solid #98A2B3;padding-left:10px;margin-bottom:10px}
+  #printReport .rem.crit{border-color:#D92D20}
+}
+</style>
+</head>
+<body>
+<div class="glowfield"><div class="glow g1" id="glow1"></div><div class="glow g2"></div><div class="glow g3" id="glow3"></div></div>
+<div class="previewbar" id="previewBar"></div>
+
+<div class="app">
+  <header>
+    <div class="orb"><img src="icon-192.png" alt="Footprint Guard"></div>
+    <div>
+      <h1 class="logo" id="appName"></h1>
+      <div class="tagline" id="tagline"></div>
+    </div>
+    <div class="hgroup">
+      <span class="chip amber" id="modeBadge"></span>
+      <button class="langbtn" id="langToggle">EN</button>
+    </div>
+  </header>
+
+  <div class="hero" id="hero">
+    <h2 id="heroTitle"></h2>
+    <p id="heroSub"></p>
+    <div class="chips" id="heroChips"></div>
+  </div>
+
+  <div class="searchbar glass">
+    <span class="sic" id="searchIcon"></span>
+    <input id="auditInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false">
+    <span class="chip em kindchip" id="kindChip"></span>
+    <button class="gobtn" id="goBtn" aria-label="Run audit"></button>
+  </div>
+  <div class="kanon"><span id="lockIc"></span><span id="kanonNote"></span></div>
+  <div class="err glass hidden" id="errBox"></div>
+
+  <div id="results" class="hidden">
+    <div class="sec">
+      <div class="gaugecard glass">
+        <div class="idrow"><span id="idIcon"></span><span id="identityLbl"></span><span class="mono" id="identityVal"></span><span style="margin-inline-start:auto" id="mockBadge2"></span></div>
+        <div class="gaugewrap">
+          <svg id="gauge" width="250" height="250" viewBox="0 0 260 260"></svg>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div id="compBars"></div>
+        <div style="margin-top:18px"><button class="btn" id="newAuditBtn"></button></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><span id="icGrid"></span><span class="t" id="hExposure"></span><span class="rule"></span></div>
+      <div class="grid" id="expGrid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><span id="icClock"></span><span class="t" id="hTimeline"></span><span class="rule"></span><span class="tr" id="tlCount"></span></div>
+      <div id="noKeyWarn"></div>
+      <div class="timeline glass" id="timeline"></div>
+    </div>
+
+    <div class="sec" id="platSec">
+      <div class="sechead"><span id="icGlobe"></span><span class="t" id="hPlatforms"></span><span class="rule"></span><span class="tr" id="platCount"></span></div>
+      <p class="note" id="platNote" style="margin-bottom:10px"></p>
+      <div class="platcard glass" id="platList"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><span id="icShield"></span><span class="t" id="hRem"></span><span class="rule"></span><span class="tr" id="remCount"></span></div>
+      <div id="remList"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><span id="icFile"></span><span class="t" id="hExport"></span><span class="rule"></span></div>
+      <div class="cardpad glass">
+        <div class="btnrow">
+          <button class="btn primary" id="btnPdf"></button>
+          <button class="btn" id="btnMd"></button>
+        </div>
+        <div style="margin-top:10px"><button class="btn" id="btnCopyMd"></button></div>
+        <p class="note" id="pdfNote" style="margin-top:12px"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechead"><span id="icKey"></span><span class="t" id="hPw"></span><span class="rule"></span></div>
+    <div class="cardpad glass">
+      <p class="note" id="pwHint" style="color:var(--txm);font-size:12.5px"></p>
+      <div class="field" style="margin-top:12px">
+        <div class="inp"><span id="pwKeyIc"></span><input id="pwInput" type="password" autocomplete="off" placeholder="••••••••••"></div>
+        <button class="btn primary" id="pwBtn" style="width:auto;flex:none;padding:13px 20px"></button>
+      </div>
+      <div id="pwResult"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sechead"><span id="icSliders"></span><span class="t" id="hSettings"></span><span class="rule"></span></div>
+    <div class="cardpad glass">
+      <div class="setrow">
+        <div class="pico" style="color:var(--amb)" id="mockIc"></div>
+        <div class="sb"><div class="st1" id="mockT"></div><div class="st2" id="mockD"></div></div>
+        <label class="sw"><input type="checkbox" id="mockToggle" checked><span class="tr"></span><span class="th"></span></label>
+      </div>
+      <div class="lbl" id="keyLbl"></div>
+      <div class="inp"><span id="keyIc"></span><input id="hibpKey" type="password" placeholder="hibp-api-key" autocomplete="off"></div>
+      <p class="note" id="keyHint" style="margin-top:6px"></p>
+      <div class="setrow" style="margin-top:18px">
+        <span id="langIc"></span><div class="sb"><div class="st1" id="langLbl" style="font-size:13.5px;font-weight:400;color:var(--txm)"></div></div>
+        <div class="langchips">
+          <button class="lchip" id="chipAr">العربية</button>
+          <button class="lchip" id="chipEn">English</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p class="note" id="privacyNote"></p>
+    <div class="ver" dir="ltr">Footprint Guard v1.0.0 · Flutter · ARM64 · HIBP · 60-platform OSINT</div>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="scan glass">
+    <div class="radar">
+      <div class="ax" style="left:50%;top:0;width:1px;height:100%"></div>
+      <div class="ax" style="top:50%;left:0;height:1px;width:100%"></div>
+      <div class="sweep"></div>
+      <div class="blip" style="top:34%;left:66%"></div>
+      <div class="blip" style="top:62%;left:26%;animation-delay:.8s"></div>
+      <div class="blip" style="top:72%;left:56%;animation-delay:1.5s"></div>
+      <span class="cross" id="crossIc"></span>
+    </div>
+    <div class="sl" id="scanLbl"></div>
+    <div class="stg" id="scanStage"></div>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+    <div class="pct" id="pct">0%</div>
+    <div class="log" id="logBox"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="printReport"></div>
+
+<script>
+/* ================= Feather-style thin-stroke icons (inline SVG, no emoji) ================= */
+const P = {
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>',
+  atSign:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  smartphone:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  key:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  fileText:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  alertTriangle:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  checkCircle:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  mapPin:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  creditCard:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  hash:'<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
+  database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+  wifi:'<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  sliders:'<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  crosshair:'<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>',
+  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  help:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  trendingUp:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  code:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  playCircle:'<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'
+};
+const ic = (n, cls='') => `<svg class="ic ${cls}" viewBox="0 0 24 24">${P[n]||P.info}</svg>`;
+
+/* ================= i18n (mirrors lib/l10n/strings.dart) ================= */
+let AR = true;
+const t = (en, ar) => AR ? ar : en;
+const STR = {
+  appName:['Footprint Guard','حارس الأثر الرقمي'], tagline:['Digital Footprint & Social Engineering Audit','مسح الأثر الرقمي والهندسة الاجتماعية'],
+  searchHint:['Email, username, or phone number','بريد إلكتروني أو اسم مستخدم أو رقم هاتف'],
+  scanning:['Scanning','جارٍ الفحص'], riskScore:['Exposure Risk Score','درجة خطر التعرض'],
+  exposure:['Exposure Breakdown','تفصيل البيانات المُعرّضة'], timeline:['Breach Timeline','الخط الزمني للتسريبات'],
+  platformsH:['Public Accounts Found','الحسابات العامة المكتشفة'], rem:['Remediation Plan','خطة المعالجة'],
+  exportH:['Exposure Report','تقرير التعرض'], expPdf:['PDF Report (Print)','تقرير PDF (طباعة)'], expMd:['Markdown Report','تقرير Markdown'],
+  copyMd:['Copy Markdown','نسخ Markdown'], copied:['Copied to clipboard','تم النسخ إلى الحافظة'],
+  pwH:['Password Exposure Check','فحص تعرض كلمة المرور'],
+  pwHint:['Type a password to test — it never leaves this browser (k-Anonymity). In LIVE mode this performs a real HIBP range lookup.','اكتب كلمة مرور للفحص — لا تغادر هذا المتصفح أبدًا (k-Anonymity). في الوضع المباشر يتم استعلام HIBP حقيقي.'],
+  check:['Check','افحص'], pwned:['PWNED','مُخترقة'], notPwned:['Not found in known breaches','غير موجودة في التسريبات المعروفة'],
+  settings:['Audit Settings','إعدادات التدقيق'], mock:['Mock Audit Mode','وضع التدقيق التجريبي'],
+  mockD:['Simulated data — full flow testable without API keys or network','بيانات محاكاة — اختبار كامل دون مفاتيح API أو اتصال بالشبكة'],
+  sim:['SIMULATED','محاكاة'], live:['LIVE','مباشر'],
+  keyL:['HIBP API Key (optional, in-memory only)','مفتاح HIBP API (اختياري، يبقى في الذاكرة فقط)'],
+  keyH:['Paste a personal key from haveibeenpwned.com/API/Key. Note: HIBP blocks direct browser calls (CORS) — email breach lookup runs natively in the APK.','الصق مفتاحك من haveibeenpwned.com/API/Key. ملاحظة: HIBP يمنع طلبات المتصفح المباشرة (CORS) — فحص تسريبات البريد يعمل أصليًا داخل APK.'],
+  identity:['Audited identity','الهوية قيد التدقيق'], newAudit:['New Audit','تدقيق جديد'],
+  breaches:['breaches','تسريب'], platforms:['platforms','منصة'], actions:['actions','إجراء وقائي'],
+  bcomp:['Breach component','مكوّن التسريبات'], pcomp:['Platforms penalty','عقوبة المنصات'], pwcomp:['Password penalty','عقوبة كلمة المرور'],
+  hero:['Your digital shadow, measured.','ظلّك الرقمي، بالأرقام.'],
+  heroSub:['Breaches, leaked data types and public accounts — fused into one social-engineering threat score.','التسريبات وأنواع البيانات المُسرّبة والحسابات العامة — مدمجة في درجة تهديد واحدة للهندسة الاجتماعية.'],
+  kanon:['Only the first 5 characters of the local SHA-1 hash are sent. Matching happens on-device.','يتم إرسال أول 5 أحرف فقط من تجزئة SHA-1 المحلية. تتم المطابقة على الجهاز.'],
+  privacy:['Zero custom servers · Zero storage · Zero tracking. Requests go directly from this device to HIBP and to each platform over TLS.','لا خوادم وسيطة · لا تخزين · لا تتبّع. تنتقل الطلبات من هذا الجهاز مباشرة إلى HIBP وإلى كل منصة عبر TLS.'],
+  platNote:['Usernames are not unique identities — treat each hit as an indicator and verify manually.','أسماء المستخدمين ليست هويات فريدة — تعامل مع كل نتيجة كمؤشر يستلزم التحقق اليدوي.'],
+  pdfNote:['PDF opens the print dialog with a professional printer-friendly report. The Markdown export is fully bilingual.','يفتح PDF حوار الطباعة بتقرير احترافي مناسب للطباعة. تصدير Markdown ثنائي اللغة بالكامل.'],
+  enterFirst:['Enter an email, username or phone number first','أدخل بريدًا أو اسم مستخدم أو رقم هاتف أولًا'],
+  unknown:['Could not classify this input','تعذّر تصنيف هذا الإدخال'],
+  verified:['Verified breach','تسريب موثّق'], unverified:['Unverified','غير موثّق'], sensitive:['SENSITIVE','حساس'],
+  affected:['accounts affected','حساب متأثر'], exposed:['EXPOSED','مُسرّب'], notexp:['Not exposed','غير مُسرّب'],
+  kindEmail:['Email address','بريد إلكتروني'], kindUser:['Username','اسم مستخدم'], kindPhone:['Phone number','رقم هاتف'],
+  tierSafe:['Safe','آمن'], tierLow:['Low','منخفض'], tierMod:['Moderate','متوسط'], tierCrit:['Critical','حرج'],
+  lang:['Language','اللغة'], downloadDone:['Markdown report downloaded','تم تنزيل تقرير Markdown'],
+  stages:[['Classifying input & arming privacy filter','Querying breach corpora','Sweeping 60 platforms for this username','Computing social-engineering threat score','Building remediation plan'],
+          ['تصنيف الإدخال وتفعيل مرشح الخصوصية','استعلام قواعد بيانات التسريبات','مسح 60 منصة بحثًا عن اسم المستخدم','حساب درجة تهديد الهندسة الاجتماعية','بناء خطة المعالجة']],
+  noKey:['Breach lookup skipped or browser-blocked: HIBP email checks require a personal API key and run natively in the Android app (browsers are CORS-blocked by HIBP). Username recon limits in-browser are shown per platform.','تم تخطي فحص التسريبات أو حظره المتصفح: فحص بريد HIBP يتطلب مفتاحًا شخصيًا ويعمل أصليًا داخل تطبيق Android (HIBP يحظر طلبات المتصفح عبر CORS).'],
+  noAccounts:['No public accounts confirmed for this username.','لم يتم تأكيد أي حسابات عامة لاسم المستخدم هذا.'],
+  preview:['Interactive preview of the Flutter Android app — identical engine, formulas and design. LIVE password check calls the real HIBP range API from your browser.','معاينة تفاعلية لتطبيق Flutter على Android — نفس المحرك والمعادلات والتصميم. فحص كلمة المرور المباشر يستدعي API الحقيقي من متصفحك.'],
+  corsNote:['blocked by browser (CORS) — verified natively in the APK','حظره المتصفح (CORS) — يتم التحقق أصليًا داخل APK'],
+  seenX:['seen','ظهرت'], timesX:['times in breach corpora','مرة في قواعد التسريبات'],
+  prefixNote:['SHA-1 prefix sent','بادئة SHA-1 المُرسلة'], suffixNote:['suffix matched locally','تمت مطابقة اللاحقة محليًا'],
+  netErr:['Network error — check connection and retry','خطأ في الشبكة — تحقق من الاتصال وحاول مجددًا']
+};
+const S = k => STR[k][AR?1:0];
+const DC_AR = {'Passwords':'كلمات المرور','Email addresses':'عناوين البريد','Phone numbers':'أرقام الهاتف','IP addresses':'عناوين IP','Physical addresses':'العناوين السكنية','Dates of birth':'تواريخ الميلاد','Credit cards':'البطاقات الائتمانية','Social security numbers':'أرقام الضمان/الهوية','Security questions and answers':'أسئلة الأمان','Names':'الأسماء','Usernames':'أسماء المستخدمين','Geographic locations':'المواقع الجغرافية','Password hints':'تلميحات كلمة المرور','Genders':'النوع','Social media profiles':'حسابات التواصل'};
+const CAT_AR = {dev:'تطوير',social:'اجتماعي',media:'وسائط',gaming:'ألعاب',creative:'إبداعي',writing:'كتابة',creator:'صنّاع محتوى'};
+const dcLabel = d => AR ? (DC_AR[d]||d) : d;
+const catLabel = c => AR ? (CAT_AR[c]||c) : c;
+const DC_ICON = {'Passwords':'key','Password hints':'key','Email addresses':'mail','Phone numbers':'phone','IP addresses':'wifi','Physical addresses':'mapPin','Dates of birth':'calendar','Credit cards':'creditCard','Bank account numbers':'creditCard','Social security numbers':'hash','Government issued IDs':'hash','Passport numbers':'hash','Security questions and answers':'help','Names':'user','Usernames':'atSign','Geographic locations':'globe','Social media profiles':'users'};
+const CAT_ICON = {dev:'code',social:'users',media:'playCircle',gaming:'target',creative:'camera',writing:'edit',creator:'zap'};
+
+/* ================= Engine (JS mirror of the Dart services) ================= */
+const W = {'Passwords':18,'Password hints':14,'Security questions and answers':12,'Credit cards':22,'Bank account numbers':22,'Social security numbers':25,'Passport numbers':22,'Government issued IDs':22,'Phone numbers':12,'Physical addresses':14,'Dates of birth':10,'IP addresses':8,'Geographic locations':6,'Email addresses':4,'Names':3,'Usernames':2,'Genders':1,'Social media profiles':3,'Private messages':10,'Photos':6,'Employment':4,'Education':3,'Financial':12};
+const emailRe=/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, phoneRe=/^\+?[0-9\s\-()]{7,18}$/, userRe=/^[A-Za-z0-9._\-]{2,40}$/;
+function classify(v){v=v.trim();if(!v)return'unknown';if(emailRe.test(v))return'email';const d=v.replace(/[^0-9]/g,'');if(phoneRe.test(v)&&d.length>=7&&d.length<=15&&/^[+0-9]/.test(v))return'phone';if(userRe.test(v))return'username';return'unknown';}
+function deriveUser(v,k){if(k==='email')return v.split('@')[0];if(k==='username')return v.replace(/^@/,'');return'';}
+function redact(v,k){v=v.trim();if(k==='email'){const[a,b]=v.split('@');if(!b)return mask(v);const di=b.lastIndexOf('.');return (a[0]||'')+'•••@'+(di>0?b[0]+'••••'+b.slice(di):(b[0]||'')+'••••');}if(k==='phone'){const n=(v.startsWith('+')?'+':'')+v.replace(/[^0-9]/g,'');return n.length<=4?'•••':(v.startsWith('+')?n.slice(0,3):n.slice(0,2))+' ••• ••• '+n.slice(-4);}return mask(v.replace(/^@/,''));}
+function mask(v){return v.length<=2?(v[0]||'')+'•••':v.slice(0,2)+'•••'+v[v.length-1];}
+async function sha1Hex(s){const buf=await crypto.subtle.digest('SHA-1',new TextEncoder().encode(s));return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();}
+function parseRange(body,suffix){for(const line of body.split(/\r?\n/)){const i=line.indexOf(':');if(i<=0)continue;if(line.slice(0,i).trim().toUpperCase()===suffix.toUpperCase()){const n=parseInt(line.slice(i+1).trim(),10)||0;return n>0?n:null;}}return null;}
+async function checkPasswordLive(pw){const h=await sha1Hex(pw);const prefix=h.slice(0,5),suffix=h.slice(5);const r=await fetch('https://api.pwnedpasswords.com/range/'+prefix,{headers:{'Add-Padding':'true'}});if(!r.ok)throw new Error('HTTP '+r.status);const count=parseRange(await r.text(),suffix);return{found:count!==null,count:count||0,prefix};}
+function recency(date,now){const y=(now-date)/(365.25*864e5);return y<=1?1:y<=3?.85:y<=5?.7:y<=8?.55:.4;}
+function assess(breaches,foundCount,pwRes,now=new Date()){
+  let raw=0;const per={},cnt={};
+  for(const b of breaches){const rf=recency(new Date(b.date),now)*(b.sensitive?1.15:1);for(const dc of b.dc){const c=(W[dc]??2)*rf;raw+=c;per[dc]=(per[dc]||0)+c;cnt[dc]=(cnt[dc]||0)+1;}}
+  const bc=Math.min(raw,75),pp=Math.min(foundCount*1.5,25),pwp=pwRes?.found?(pwRes.count>100000?10:pwRes.count>1000?8:6):0;
+  const score=Math.max(0,Math.min(100,Math.round(bc+pp+pwp)));
+  const tier=score<=20?'safe':score<=45?'low':score<=70?'moderate':'critical';
+  const order=['Passwords','Email addresses','Phone numbers','IP addresses','Physical addresses','Dates of birth','Credit cards','Social security numbers','Security questions and answers','Names','Usernames','Geographic locations'];
+  const breakdown=order.map(dc=>({dc,count:cnt[dc]||0,weighted:per[dc]||0}));
+  for(const dc in per)if(!order.includes(dc))breakdown.push({dc,count:cnt[dc],weighted:per[dc]});
+  return{score,tier,bc,pp,pwp,breakdown};
+}
+/* Mock fixtures: public metadata of real historical breaches (simulation only) */
+const BREACH_POOL=[
+ {title:'Adobe',domain:'adobe.com',date:'2013-10-04',count:152445165,verified:true,sensitive:false,dc:['Email addresses','Password hints','Passwords','Usernames'],desc:'In October 2013, 153 million Adobe accounts were breached with encrypted passwords and plain-text password hints.'},
+ {title:'LinkedIn',domain:'linkedin.com',date:'2012-05-05',count:164611595,verified:true,sensitive:false,dc:['Email addresses','Passwords'],desc:'In 2012 LinkedIn was breached; 164 million email addresses and unsalted SHA-1 password hashes later surfaced for sale.'},
+ {title:'Canva',domain:'canva.com',date:'2019-05-24',count:137272116,verified:true,sensitive:false,dc:['Email addresses','Geographic locations','Names','Passwords','Usernames'],desc:'In May 2019 the graphic design service Canva suffered a breach of 137 million subscribers.'},
+ {title:'Dubsmash',domain:'dubsmash.com',date:'2018-12-01',count:161749950,verified:true,sensitive:false,dc:['Email addresses','Passwords','Usernames'],desc:'In December 2018, 162 million Dubsmash accounts were breached and later sold on a dark web marketplace.'},
+ {title:'MyFitnessPal',domain:'myfitnesspal.com',date:'2018-02-01',count:143606147,verified:true,sensitive:false,dc:['Email addresses','IP addresses','Passwords'],desc:'In February 2018, 144 million MyFitnessPal accounts were breached and sold online the following year.'},
+ {title:'Twitter (2022 API scrape)',domain:'twitter.com',date:'2022-01-01',count:211524284,verified:true,sensitive:false,dc:['Email addresses','Names','Phone numbers','Usernames'],desc:'An API vulnerability allowed enumeration linking emails and phone numbers to Twitter accounts; 211 million records circulated in 2023.'},
+ {title:'Wattpad',domain:'wattpad.com',date:'2020-06-29',count:268765495,verified:true,sensitive:false,dc:['Dates of birth','Email addresses','Genders','Geographic locations','IP addresses','Names','Passwords','Social media profiles','Usernames'],desc:'In June 2020 the user-generated stories website Wattpad suffered a breach exposing 269 million records.'},
+ {title:'ParkMobile',domain:'parkmobile.io',date:'2021-03-01',count:20949025,verified:true,sensitive:false,dc:['Dates of birth','Email addresses','Names','Passwords','Phone numbers','Physical addresses'],desc:'In March 2021 the parking payment service ParkMobile suffered a breach exposing 21 million customers.'},
+ {title:'Collection #1 (combo list)',domain:'',date:'2019-01-07',count:772904991,verified:false,sensitive:false,dc:['Email addresses','Passwords'],desc:'A credential-stuffing compilation of 773 million unique email/password pairs aggregated from thousands of earlier breaches.'}
+];
+function seeded(str){let h=0;for(const c of str.toLowerCase())h=(h*31+c.codePointAt(0))&0x7fffffff;let s=h||42;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
+function shuffle(a,rng){for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function mockBreaches(input,kind){const rng=seeded(input);const pool=shuffle([...BREACH_POOL],rng);const n=kind==='phone'?1+Math.floor(rng()*2):3+Math.floor(rng()*4);return pool.slice(0,n).sort((a,b)=>b.date<a.date?-1:1);}
+function mockPlatforms(input,user){const rng=seeded(input+'#platforms');const idx=shuffle(window.FG_PLATFORMS.map((_,i)=>i),rng);const found=new Set(idx.slice(0,6+Math.floor(rng()*11)));return window.FG_PLATFORMS.map((p,i)=>({platform:p,found:found.has(i),url:p.url.replace('{u}',encodeURIComponent(user||'user'))})).sort((a,b)=>(b.found-a.found)||a.platform.name.localeCompare(b.platform.name));}
+const COMMON_PW=new Set(['password','123456','12345678','qwerty','letmein','admin','111111','123456789','12345','123123','password1','iloveyou']);
+async function mockPw(pw){const h=await sha1Hex(pw);const weak=pw.length<10||/^[0-9]+$/.test(pw)||COMMON_PW.has(pw.toLowerCase());if(!weak)return{found:false,count:0,prefix:h.slice(0,5)};const rng=seeded(pw);return{found:true,count:1200+Math.floor(rng()*9000000),prefix:h.slice(0,5)};}
+/* Remediation rules (mirror of RemediationEngine, abbreviated text shared with Dart) */
+function remediation(breaches,hits,pwRes,kind){
+  const steps=[];const types=new Set();breaches.forEach(b=>b.dc.forEach(d=>types.add(d)));
+  const found=hits.filter(h=>h.found);const pwB=breaches.filter(b=>b.dc.includes('Passwords'));
+  const add=(priority,icon,mins,tEn,tAr,bEn,bAr)=>steps.push({priority,icon,mins,tEn,tAr,bEn,bAr});
+  if(pwRes?.found)add('critical','key',15,'Replace the compromised password everywhere','استبدل كلمة المرور المُخترقة في كل مكان',
+    `The checked password has appeared ${pwRes.count.toLocaleString()} times in known breach corpora and is in every credential-stuffing wordlist. Replace it everywhere with a unique 16+ character passphrase from a password manager.`,
+    `ظهرت كلمة المرور ${pwRes.count.toLocaleString()} مرة في قواعد التسريبات المعروفة. استبدلها في كل مكان بعبارة مرور فريدة من 16 حرفًا عبر مدير كلمات مرور.`);
+  if(pwB.length)add('critical','refresh',20,`Rotate passwords on ${pwB.length} breached site(s)`,`بدّل كلمات المرور في ${pwB.length} موقع مُخترق`,
+    `Passwords were exposed in: ${pwB.slice(0,3).map(b=>b.title).join(', ')}. Change those first, then every account sharing them. Assume credential stuffing is already underway.`,
+    `تم تسريب كلمات مرور من: ${pwB.slice(0,3).map(b=>b.title).join('، ')}. غيّرها أولًا ثم أي حساب يشاركها. افترض أن هجمات حشو الاعتماد بدأت بالفعل.`);
+  if(types.has('Credit cards')||types.has('Bank account numbers'))add('critical','creditCard',30,'Freeze and reissue exposed payment cards','جمّد البطاقات البنكية المُعرّضة وأعد إصدارها',
+    'Payment data appears in your breach history. Freeze affected cards, request new numbers, enable transaction alerts, and review 12 months of statements.',
+    'تظهر بيانات دفع في سجل التسريبات. جمّد البطاقات المتأثرة واطلب أرقامًا جديدة وفعّل تنبيهات المعاملات وراجع كشوف 12 شهرًا.');
+  if(types.has('Social security numbers')||types.has('Government issued IDs')||types.has('Passport numbers'))add('critical','shield',45,'Fraud alert / credit freeze for exposed ID numbers','تنبيه احتيال / تجميد ائتمان لأرقام الهوية المُسربة',
+    'Government IDs enable full identity theft. Place a freeze/fraud alert and never trust callers who quote your ID — call back on official numbers.',
+    'أرقام الهوية تتيح سرقة هوية كاملة. فعّل التجميد/التنبيه ولا تثق بمتصل يذكر رقم هويتك — اتصل أنت بالرقم الرسمي.');
+  if(breaches.length||pwRes?.found)add('high','smartphone',25,'Enable 2FA via Authenticator App (not SMS)','فعّل المصادقة الثنائية عبر تطبيق المصادقة (وليس SMS)',
+    'With breached credentials circulating, enable TOTP authenticator 2FA or passkeys starting with email, banking and cloud storage. Avoid SMS where an authenticator exists (SIM-swap risk).',
+    'فعّل المصادقة الثنائية TOTP أو Passkeys بدءًا من البريد والبنوك والتخزين السحابي. تجنب SMS متى توفر بديل (خطر تبديل الشريحة).');
+  if(types.has('Security questions and answers')||types.has('Password hints'))add('high','help',15,'Reset security questions with random fake answers','أعد تعيين أسئلة الأمان بإجابات وهمية عشوائية',
+    'Exposed answers/hints must be replaced with long random strings stored in your password manager. Real answers are OSINT-trivial.',
+    'استبدل الإجابات المُسربة بسلاسل عشوائية طويلة في مدير كلمات المرور. الإجابات الحقيقية سهلة عبر OSINT.');
+  if(types.has('Phone numbers')||kind==='phone')add('high','phone',10,'Harden the exposed phone number (SIM-swap & smishing)','حصّن رقم الهاتف ضد تبديل الشريحة والتصيد',
+    'Set a carrier PIN/port-out lock, remove the number from public bios, enable WhatsApp & Telegram two-step verification, never read OTPs to callers.',
+    'عيّن PIN لدى شركة الاتصالات وقفل نقل الرقم، احذف الرقم من النبذات العامة، فعّل التحقق بخطوتين في واتساب وتيليجرام، ولا تقرأ OTP لأي متصل.');
+  if(found.length>=5)add('medium','eyeOff',40,`Reduce identity correlation across ${found.length} public accounts`,`قلّل ربط الهوية عبر ${found.length} حسابًا عامًا`,
+    `Same username on ${found.slice(0,4).map(h=>h.platform.name).join(', ')} and more lets attackers build pretexts. Delete dormant accounts, re-alias non-essential profiles, strip phone/email from bios.`,
+    `نفس الاسم في ${found.slice(0,4).map(h=>h.platform.name).join('، ')} وغيرها يتيح بناء سيناريوهات احتيال. احذف المهجور وغيّر أسماء الحسابات غير الأساسية واحذف الهاتف/البريد من النبذات.`);
+  else if(found.length)add('low','eye',15,'Review privacy settings on discovered accounts','راجع إعدادات الخصوصية في الحسابات المكتشفة',
+    'Verify each account is yours (unknown ones may be impersonation), restrict posts/friends visibility, remove personal details from public fields.',
+    'تحقق أن كل حساب يخصك، قيّد رؤية المنشورات والأصدقاء، واحذف التفاصيل الشخصية من الحقول العامة.');
+  if(types.has('Physical addresses')||types.has('Dates of birth'))add('medium','mapPin',20,'Expect targeted pretexting — set a family code word','توقّع احتيالًا موجّهًا — ضع كلمة سر عائلية',
+    'Address/DOB exposure powers bank, courier and "relative in trouble" scams. Agree a family code word, verify calls via official numbers, opt out of data brokers.',
+    'العنوان/تاريخ الميلاد يغذّي احتيال البنوك والشحن والأقارب. اتفق على كلمة سر عائلية وتحقق عبر الأرقام الرسمية واطلب الإزالة من وسطاء البيانات.');
+  add('low','checkCircle',30,'Adopt a password manager + breach monitoring routine','اعتمد مدير كلمات مرور ومراقبة دورية للتسريبات',
+    'Unique password per account in an audited manager, long master passphrase with offline backup, re-audit quarterly, and subscribe to breach notifications (haveibeenpwned.com/NotifyMe).',
+    'كلمة فريدة لكل حساب في مدير موثوق، عبارة رئيسية طويلة بنسخة دون اتصال، تدقيق كل 3 أشهر، واشتراك في إشعارات التسريب (haveibeenpwned.com/NotifyMe).');
+  const ord={critical:0,high:1,medium:2,low:3};return steps.sort((a,b)=>ord[a.priority]-ord[b.priority]);
+}
+
+/* ================= UI state + rendering ================= */
+const $=id=>document.getElementById(id);
+let MOCK=true, RESULT=null, PWONLY=null, scanning=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtN=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':''+n;
+function toast(msg){const e=$('toast');e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600);}
+const TIER_COLOR={safe:'#00FFA3',low:'#7BE8B8',moderate:'#FFC24B',critical:'#FF3B30'};
+const tierLabel=tr=>S(tr==='safe'?'tierSafe':tr==='low'?'tierLow':tr==='moderate'?'tierMod':'tierCrit');
+
+function setIcons(){
+  $('goBtn').innerHTML=ic('crosshair'); $('lockIc').innerHTML=ic('lock','xs'); $('idIcon').innerHTML=ic('user','sm');
+  $('icGrid').innerHTML=ic('grid','sm'); $('icClock').innerHTML=ic('clock','sm'); $('icGlobe').innerHTML=ic('globe','sm');
+  $('icShield').innerHTML=ic('shield','sm'); $('icFile').innerHTML=ic('fileText','sm'); $('icKey').innerHTML=ic('key','sm');
+  $('icSliders').innerHTML=ic('sliders','sm'); $('pwKeyIc').innerHTML=ic('key','sm'); $('keyIc').innerHTML=ic('key','sm');
+  $('mockIc').innerHTML=ic('layers'); $('langIc').innerHTML=ic('globe','sm'); $('crossIc').innerHTML=ic('crosshair');
+  updateSearchIcon(); $('pwBtn').innerHTML=ic('search','sm')+'<span>'+S('check')+'</span>';
+}
+function applyLang(){
+  document.documentElement.lang=AR?'ar':'en'; document.documentElement.dir=AR?'rtl':'ltr';
+  $('previewBar').innerHTML='<b>Footprint Guard</b> — '+esc(S('preview'));
+  $('appName').textContent=S('appName'); $('tagline').textContent=S('tagline');
+  $('modeBadge').textContent=MOCK?S('sim'):S('live'); $('modeBadge').className='chip '+(MOCK?'amber':'em');
+  $('langToggle').textContent=AR?'EN':'عربي';
+  $('heroTitle').textContent=S('hero'); $('heroSub').textContent=S('heroSub');
+  $('heroChips').innerHTML=`<span class="chip">${ic('database','xs')}${t('Breach corpora (HIBP)','قواعد التسريبات (HIBP)')}</span><span class="chip">${ic('globe','xs')}${t('60 platforms','60 منصة')}</span><span class="chip">${ic('key','xs')}k-Anonymity SHA-1</span><span class="chip">${ic('trendingUp','xs')}${t('Threat scoring','درجة التهديد')}</span>`;
+  $('auditInput').placeholder=S('searchHint'); $('kanonNote').textContent=S('kanon');
+  $('identityLbl').textContent=S('identity'); $('newAuditBtn').innerHTML=ic('refresh','sm')+'<span>'+S('newAudit')+'</span>';
+  $('hExposure').textContent=S('exposure'); $('hTimeline').textContent=S('timeline'); $('hPlatforms').textContent=S('platformsH');
+  $('platNote').textContent=S('platNote'); $('hRem').textContent=S('rem'); $('hExport').textContent=S('exportH');
+  $('btnPdf').innerHTML=ic('printer','sm')+'<span>'+S('expPdf')+'</span>';
+  $('btnMd').innerHTML=ic('download','sm')+'<span>'+S('expMd')+'</span>';
+  $('btnCopyMd').innerHTML=ic('copy','sm')+'<span>'+S('copyMd')+'</span>';
+  $('pdfNote').textContent=S('pdfNote'); $('hPw').textContent=S('pwH'); $('pwHint').textContent=S('pwHint');
+  $('hSettings').textContent=S('settings'); $('mockT').textContent=S('mock'); $('mockD').textContent=S('mockD');
+  $('keyLbl').textContent=S('keyL'); $('keyHint').textContent=S('keyH'); $('langLbl').textContent=S('lang');
+  $('privacyNote').textContent=S('privacy'); $('scanLbl').textContent=S('scanning').toUpperCase();
+  $('chipAr').classList.toggle('on',AR); $('chipEn').classList.toggle('on',!AR);
+  setIcons(); updateKind(); if(RESULT)renderResult(false); if(PWONLY)renderPw(PWONLY);
+}
+function updateSearchIcon(){const k=classify($('auditInput').value||'');$('searchIcon').innerHTML=ic(k==='email'?'mail':k==='phone'?'phone':k==='username'?'atSign':'search');}
+function updateKind(){const k=classify($('auditInput').value||'');const chip=$('kindChip');updateSearchIcon();
+  if(k==='unknown'){chip.style.display='none';}else{chip.style.display='inline-flex';chip.textContent=S(k==='email'?'kindEmail':k==='phone'?'kindPhone':'kindUser');}}
+
+/* ---- Gauge (SVG, 270deg graduated arc) ---- */
+function polar(cx,cy,r,deg){const a=(deg-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+function arcPath(cx,cy,r,start,end){const[sx,sy]=polar(cx,cy,r,end),[ex,ey]=polar(cx,cy,r,start);const large=end-start<=180?0:1;return `M ${sx} ${sy} A ${r} ${r} 0 ${large} 0 ${ex} ${ey}`;}
+function drawGauge(score,tier,animate=true){
+  const svg=$('gauge');const C=130,R=102,START=-135,SWEEP=270;const col=TIER_COLOR[tier];
+  let ticks='';for(let i=0;i<=20;i++){const a=START+SWEEP*i/20;const maj=i%5===0;
+    const[p1x,p1y]=polar(C,C,R+11,a),[p2x,p2y]=polar(C,C,R+(maj?19:15),a);
+    ticks+=`<line x1="${p1x}" y1="${p1y}" x2="${p2x}" y2="${p2y}" stroke="rgba(255,255,255,${maj?.35:.2})" stroke-width="${maj?1.1:.8}"/>`;
+    if(maj){const[lx,ly]=polar(C,C,R+30,a);ticks+=`<text x="${lx}" y="${ly+3}" font-size="8.5" fill="#6B7686" text-anchor="middle">${i*5}</text>`;}}
+  svg.innerHTML=`<defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#00FFA3"/><stop offset="38%" stop-color="#5FE3B0"/><stop offset="58%" stop-color="#FFC24B"/><stop offset="80%" stop-color="#FF8A3D"/><stop offset="100%" stop-color="#FF3B30"/></linearGradient></defs>
+    ${ticks}
+    <path d="${arcPath(C,C,R,START,START+SWEEP)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9" stroke-linecap="round"/>
+    <path id="gVal" d="" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round"/>
+    <circle id="gDotG" r="10" fill="${col}" opacity=".3" style="filter:blur(6px)"/><circle id="gDot" r="4.2" fill="${col}" stroke="rgba(255,255,255,.8)"/>
+    <text x="130" y="128" text-anchor="middle" font-size="54" font-weight="200" fill="#F5F7FA"><tspan id="gNum">0</tspan><tspan font-size="15" fill="#6B7686"> /100</tspan></text>
+    <g><rect id="gTierBg" x="95" y="142" width="70" height="20" rx="10" fill="${col}" opacity=".12"/><text id="gTier" x="130" y="156" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="2" fill="${col}">${esc(tierLabel(tier).toUpperCase())}</text></g>
+    <text x="130" y="182" text-anchor="middle" font-size="11.5" fill="#6B7686">${esc(S('riskScore'))}</text>`;
+  const tAssess=performance.now(),dur=animate?1400:1;
+  function frame(now){const p=Math.min(1,(now-tAssess)/dur),e=1-Math.pow(1-p,3),v=score*e;
+    const val=$('gVal');if(!val)return;
+    if(v>0.2)val.setAttribute('d',arcPath(C,C,R,START,START+SWEEP*v/100));
+    const[dx,dy]=polar(C,C,R,START+SWEEP*v/100);$('gDot').setAttribute('cx',dx);$('gDot').setAttribute('cy',dy);$('gDotG').setAttribute('cx',dx);$('gDotG').setAttribute('cy',dy);
+    $('gNum').textContent=Math.round(v);
+    if(p<1)requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);
+}
+function compBar(label,v,max,color){return `<div class="bar"><div class="lr"><span>${esc(label)}</span><span class="v">${v.toFixed(1)} / ${max}</span></div><div class="track"><div class="fill" style="background:${color}" data-w="${Math.min(100,v/max*100)}"></div></div></div>`;}
+
+function renderResult(animate=true){
+  const r=RESULT;if(!r)return;
+  $('results').classList.remove('hidden');$('hero').classList.add('hidden');
+  $('identityVal').textContent=r.redacted;
+  $('mockBadge2').innerHTML=r.mock?`<span class="chip amber">${S('sim')}</span>`:`<span class="chip em">${S('live')}</span>`;
+  const col=TIER_COLOR[r.risk.tier];
+  document.documentElement.style.setProperty('--glow',col+'22');
+  drawGauge(r.risk.score,r.risk.tier,animate);
+  $('stats').innerHTML=`
+    <div class="stat">${ic('database','sm')}<div class="n">${r.breaches.length}</div><div class="l">${S('breaches')}</div></div><div class="vdiv"></div>
+    <div class="stat">${ic('globe','sm')}<div class="n">${r.found.length}/${r.hits.length||0}</div><div class="l">${S('platforms')}</div></div><div class="vdiv"></div>
+    <div class="stat">${ic('shield','sm')}<div class="n">${r.plan.length}</div><div class="l">${S('actions')}</div></div>`;
+  $('compBars').innerHTML=compBar(S('bcomp'),r.risk.bc,75,'#FF3B30')+compBar(S('pcomp'),r.risk.pp,25,'#FFC24B')+compBar(S('pwcomp'),r.risk.pwp,10,'#FF8A3D');
+  requestAnimationFrame(()=>document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
+  /* exposure grid */
+  $('expGrid').innerHTML=r.risk.breakdown.slice(0,9).map(e=>{
+    const ex=e.count>0,w=W[e.dc]??2;const c=!ex?'var(--txl)':w>=12?'var(--crim)':w>=6?'var(--amb)':'#7BE8B8';
+    return `<div class="exp glass" style="border-color:${ex?c:'var(--border2)'}">
+      <div class="icw" style="color:${c}">${ic(DC_ICON[e.dc]||'database')}${ex?`<span class="dot" style="background:${c};box-shadow:0 0 7px ${c}"></span>`:''}</div>
+      <div class="nm">${esc(dcLabel(e.dc))}</div><div class="st" style="color:${c}">${ex?`${S('exposed')} · ${e.count}`:S('notexp')}</div></div>`;}).join('');
+  /* timeline */
+  $('tlCount').textContent=r.breaches.length;
+  $('noKeyWarn').innerHTML=(!r.mock&&r.breachNote)?`<div class="warn glass"><span style="color:var(--amb)">${ic('key','sm')}</span><span class="note">${esc(S('noKey'))}</span></div>`:'';
+  $('timeline').innerHTML=r.breaches.length?r.breaches.map((b,i)=>{
+    const dc=b.dc.includes('Passwords')||b.sensitive?'var(--crim)':b.dc.includes('Phone numbers')?'var(--amb)':'var(--txm)';
+    return `<div class="tl"><div class="rail"><span class="pt" style="border-color:${dc};box-shadow:0 0 8px ${dc}"></span>${i<r.breaches.length-1?'<span class="ln"></span>':''}</div>
+    <div class="tlbody"><div class="tlhead"><span class="bt">${esc(b.title)}</span><span class="chip">${ic('calendar','xs')}${b.date}</span></div>
+    <div class="tlchips">${b.domain?`<span class="chip">${ic('globe','xs')}${esc(b.domain)}</span>`:''}
+    <span class="chip">${ic('users','xs')}${fmtN(b.count)} ${S('affected')}</span>
+    <span class="chip ${b.verified?'em':''}">${ic(b.verified?'checkCircle':'info','xs')}${b.verified?S('verified'):S('unverified')}</span>
+    ${b.sensitive?`<span class="chip crim">${ic('alertTriangle','xs')}${S('sensitive')}</span>`:''}</div>
+    ${b.desc?`<p class="tldesc">${esc(b.desc.replace(/<[^>]*>/g,''))}</p>`:''}
+    <div class="tlchips">${b.dc.map(d=>`<span class="chip" style="${['Passwords','Credit cards','Social security numbers'].includes(d)?'color:var(--crim)':''}">${ic(DC_ICON[d]||'database','xs')}${esc(dcLabel(d))}</span>`).join('')}</div>
+    </div></div>`;}).join('')
+    :`<div style="display:flex;gap:10px;align-items:center;padding:6px 0 12px"><span style="color:var(--em)">${ic('checkCircle')}</span><span style="color:var(--txm);font-size:13.5px">${S('notPwned')}</span></div>`;
+  /* platforms */
+  $('platSec').style.display=r.hits.length?'':'none';
+  $('platCount').textContent=`${r.found.length}/${r.hits.length}`;
+  const relC={high:'var(--emd)',medium:'var(--amb)',low:'var(--org)'};
+  $('platList').innerHTML=(r.found.length?r.found.map(h=>`<div class="prow"><div class="pico">${ic(CAT_ICON[h.platform.category]||'globe','sm')}</div>
+    <div class="pmeta"><div class="pname">${esc(h.platform.name)}</div><div class="purl">${esc(h.url)}</div></div>
+    <span class="chip" style="color:${relC[h.platform.reliability]}">${esc(catLabel(h.platform.category))} · ${h.platform.reliability}</span></div>`).join('')
+    :`<div style="display:flex;gap:10px;align-items:center;padding:14px 0"><span style="color:var(--em)">${ic('checkCircle','sm')}</span><span style="color:var(--txm);font-size:13px">${S('noAccounts')}</span></div>`)
+    +(r.blocked?`<p class="note" style="padding:10px 0 12px">${r.blocked} ${S('corsNote')}</p>`:'');
+  /* remediation */
+  $('remCount').textContent=r.plan.length;
+  const pc={critical:'#FF3B30',high:'#FF8A3D',medium:'#FFC24B',low:'#00C97E'};
+  const pl={critical:t('CRITICAL','حرج'),high:t('HIGH','عالٍ'),medium:t('MEDIUM','متوسط'),low:t('LOW','منخفض')};
+  $('remList').innerHTML=r.plan.map(st=>`<div class="rem glass"><div class="stripe" style="background:${pc[st.priority]};box-shadow:0 0 8px ${pc[st.priority]}"></div>
+    <div class="ric" style="color:${pc[st.priority]};border-color:${pc[st.priority]}66;background:${pc[st.priority]}1A">${ic(st.icon,'sm')}</div>
+    <div class="rb"><div class="top"><span class="pri" style="color:${pc[st.priority]}">${pl[st.priority]}</span><span class="chip">${ic('clock','xs')}~${st.mins} ${t('min','دقيقة')}</span></div>
+    <h4>${esc(AR?st.tAr:st.tEn)}</h4><p>${esc(AR?st.bAr:st.bEn)}</p></div></div>`).join('');
+}
+function renderPw(r){
+  const col=r.found?'var(--crim)':'var(--em)';
+  $('pwResult').innerHTML=`<div class="pwres" style="border-color:${col}66;background:${r.found?'rgba(255,59,48,.06)':'rgba(0,255,163,.06)'}">
+    <span style="color:${col}">${ic(r.found?'alertTriangle':'checkCircle')}</span>
+    <div><div class="big" style="color:${col}">${r.found?`${S('pwned')} — ${S('seenX')} ${r.count.toLocaleString()} ${S('timesX')}`:S('notPwned')}</div>
+    <div class="mono">SHA-1 prefix: ${r.prefix} · suffix matched locally</div></div></div>`;
+}
+/* ---- Scanner plumbing ---- */
+const logs=[];
+function slog(m){logs.push(m);if(logs.length>80)logs.shift();$('logBox').innerHTML=logs.slice(-6).map(l=>`<div>&gt; ${esc(l)}</div>`).join('');}
+function setStage(i,p){$('scanStage').textContent=STR.stages[AR?1:0][i];$('pfill').style.width=Math.round(p*100)+'%';$('pct').textContent=Math.round(p*100)+'%';}
+function showScan(v){$('overlay').classList.toggle('show',v);if(v){logs.length=0;$('logBox').innerHTML='';setStage(0,0);}}
+function err(msg){const e=$('errBox');if(!msg){e.classList.add('hidden');return;}e.classList.remove('hidden');e.innerHTML=`<span style="color:var(--crim)">${ic('alertTriangle','sm')}</span><span>${esc(msg)}</span>`;}
+
+/* ---- Live platform sweep (browser; CORS-limited, honest counts) ---- */
+async function liveSweep(user,onp){
+  const list=window.FG_PLATFORMS;const out=[];let done=0,blocked=0;
+  const queue=[...list];
+  async function worker(){while(queue.length){const p=queue.shift();const url=p.url.replace('{u}',encodeURIComponent(user));let found=false;
+    try{const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),6000);
+      const res=await fetch(url,{signal:ctl.signal});clearTimeout(to);const body=await res.text();
+      if(p.checkType==='status')found=res.status>=200&&res.status<300;
+      else if(p.checkType==='message_absent')found=res.status<400&&!p.markers.some(m=>body.toLowerCase().includes(m.toLowerCase()));
+      else found=res.status<400&&p.markers.some(m=>body.includes(m));
+    }catch(e){blocked++;}
+    out.push({platform:p,found,url});done++;onp(done,list.length,out[out.length-1]);}}
+  await Promise.all(Array.from({length:8},worker));
+  out.sort((a,b)=>(b.found-a.found)||a.platform.name.localeCompare(b.platform.name));
+  return{hits:out,blocked};
+}
+
+/* ---- Run audit ---- */
+async function runAudit(){
+  if(scanning)return;const input=$('auditInput').value.trim();err(null);
+  if(!input){toast(S('enterFirst'));return;}
+  const kind=classify(input);if(kind==='unknown'){err(S('unknown'));return;}
+  scanning=true;$('goBtn').disabled=true;showScan(true);
+  try{
+    const user=deriveUser(input,kind),rd=redact(input,kind);
+    setStage(0,.05);const lh=await sha1Hex(input.toLowerCase());
+    slog('input classified: '+kind);slog('SHA-1 local: '+lh.slice(0,5)+'*'.repeat(35)+' (suffix stays local)');slog('redacted identity: '+rd);
+    await sleep(MOCK?650:150);
+    let pwRes=null;const pwv=$('pwInput').value;
+    if(pwv){slog('k-Anonymity password check ('+(MOCK?'mock':'LIVE range API')+')');pwRes=MOCK?await mockPw(pwv):await checkPasswordLive(pwv);PWONLY=pwRes;slog('prefix '+pwRes.prefix+' sent; result: '+(pwRes.found?'PWNED x'+pwRes.count:'clean'));}
+    setStage(1,.22);let breaches=[],breachNote=false;
+    if(MOCK){slog('MOCK: simulating breach corpora query');await sleep(900);breaches=mockBreaches(input,kind);slog('MOCK: '+breaches.length+' simulated breach records');}
+    else if(kind==='email'){const key=$('hibpKey').value.trim();
+      if(key){try{slog('HIBP v3: direct TLS request');const r=await fetch('https://haveibeenpwned.com/api/v3/breachedaccount/'+encodeURIComponent(input.toLowerCase())+'?truncateResponse=false',{headers:{'hibp-api-key':key}});
+        if(r.status===404){breaches=[];}else if(r.ok){const j=await r.json();breaches=j.map(b=>({title:b.Title||b.Name,domain:b.Domain||'',date:b.BreachDate,count:b.PwnCount||0,dc:b.DataClasses||[],verified:!!b.IsVerified,sensitive:!!b.IsSensitive,desc:b.Description||''})).sort((a,b)=>b.date<a.date?-1:1);}
+        else{breachNote=true;slog('HIBP returned HTTP '+r.status);}}catch(e){breachNote=true;slog('HIBP blocked in browser (CORS) — native APK performs this check');}}
+      else{breachNote=true;slog('HIBP v3 skipped: no API key');}}
+    else slog('breach corpus lookup requires email input');
+    setStage(2,.34);let hits=[],blocked=0;
+    if(user){if(MOCK){const all=mockPlatforms(input,user);for(let i=0;i<all.length;i+=4){setStage(2,.34+Math.min(i+4,all.length)/all.length*.5);all.slice(i,i+4).forEach(h=>{if(h.found)slog('FOUND '+h.platform.name+' -> '+h.url);});await sleep(85);}hits=all;}
+      else{const r=await liveSweep(user,(d,tot,h)=>{setStage(2,.34+d/tot*.5);if(h.found)slog('FOUND '+h.platform.name+' -> '+h.url);});hits=r.hits;blocked=r.blocked;if(blocked)slog(blocked+' platforms CORS-blocked in browser');}}
+    else slog('phone input: username recon not applicable');
+    setStage(3,.9);await sleep(MOCK?450:80);
+    const found=hits.filter(h=>h.found);const risk=assess(breaches,found.length,pwRes);
+    slog(`score = ${risk.score} (breach ${risk.bc.toFixed(1)} + platforms ${risk.pp.toFixed(1)} + password ${risk.pwp.toFixed(1)})`);
+    setStage(4,.97);await sleep(MOCK?400:60);
+    RESULT={input,redacted:rd,kind,user,breaches,hits,found,blocked,risk,plan:remediation(breaches,hits,pwRes,kind),pwRes,mock:MOCK,breachNote,at:new Date()};
+    setStage(4,1);await sleep(250);
+  }catch(e){err(S('netErr')+': '+(e.message||e));}
+  finally{scanning=false;$('goBtn').disabled=false;showScan(false);if(RESULT){renderResult(true);if(PWONLY)renderPw(PWONLY);document.querySelector('.gaugecard')?.scrollIntoView({behavior:'smooth',block:'center'});}}
+}
+
+/* ---- Standalone password check (LIVE = real HIBP range API) ---- */
+async function pwCheck(){
+  const pw=$('pwInput').value;if(!pw)return;$('pwBtn').disabled=true;
+  try{const r=MOCK?await mockPw(pw):await checkPasswordLive(pw);PWONLY=r;renderPw(r);
+    if(RESULT){RESULT.pwRes=r;RESULT.risk=assess(RESULT.breaches,RESULT.found.length,r);RESULT.plan=remediation(RESULT.breaches,RESULT.hits,r,RESULT.kind);renderResult(true);}
+  }catch(e){err(S('netErr')+': '+(e.message||e));}finally{$('pwBtn').disabled=false;}
+}
+
+/* ---- Exports (Markdown mirrors ReportExportService; PDF via print) ---- */
+function buildMarkdown(r){
+  const tier={safe:'Safe (0-20)',low:'Low (21-45)',moderate:'Moderate (46-70)',critical:'Critical (71-100)'}[r.risk.tier];
+  const d=r.at;const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let m=`# ${AR?'تقرير تدقيق الأثر الرقمي — Footprint Guard':'Digital Footprint Audit Report — Footprint Guard'}\n\n`;
+  if(r.mock)m+=`> ${AR?'تنبيه: تم إنشاء هذا التقرير في وضع التدقيق التجريبي (بيانات محاكاة).':'Notice: generated in Mock Audit Mode (simulated data).'}\n\n`;
+  m+=`| Field | Value |\n|---|---|\n| Audited identity (redacted) | \`${r.redacted}\` |\n| Input type | ${r.kind} |\n| Generated | ${ds} |\n| Exposure Risk Score | **${r.risk.score}/100 — ${tier}** |\n| Breach component | ${r.risk.bc.toFixed(1)}/75 |\n| Registered-platforms penalty | ${r.risk.pp.toFixed(1)}/25 |\n| Pwned-password penalty | ${r.risk.pwp.toFixed(1)}/10 |\n\n`;
+  m+=`Formula: Score = sum(DataTypeWeight x RecencyFactor) + RegisteredPlatformsPenalty + PwnedPasswordPenalty, capped at 100.\n\n## Exposure Breakdown\n\n| Data type | Breaches | Weighted |\n|---|---:|---:|\n`;
+  for(const e of r.risk.breakdown)m+=`| ${e.dc} | ${e.count} | ${e.weighted.toFixed(1)} |\n`;
+  m+=`\n## Breach Timeline (${r.breaches.length})\n\n`;
+  for(const b of r.breaches){m+=`### ${b.title} — ${b.date}\n- Domain: ${b.domain||'—'}\n- Accounts affected: ${b.count}\n- Data exposed: ${b.dc.join(', ')}\n- Verified: ${b.verified}${b.sensitive?' · Sensitive':''}\n\n`;}
+  m+=`## Discovered Public Accounts (${r.found.length} of ${r.hits.length} checked)\n\n> Usernames are not unique identities; each hit is an indicator requiring manual verification.\n\n`;
+  for(const h of r.found)m+=`- **${h.platform.name}** (${h.platform.category}, reliability: ${h.platform.reliability}) — ${h.url}\n`;
+  if(r.pwRes)m+=`\n## Password Check (k-Anonymity)\n\nOnly the 5-character SHA-1 prefix (${r.pwRes.prefix}) was transmitted. Result: ${r.pwRes.found?`**PWNED — seen ${r.pwRes.count} times**`:'not found in known breach corpora.'}\n`;
+  m+=`\n## Remediation Plan\n\n`;
+  r.plan.forEach((st,i)=>{m+=`${i+1}. **[${st.priority.toUpperCase()}] ${AR?st.tAr:st.tEn}** (~${st.mins} min)\n   ${AR?st.bAr:st.bEn}\n`;});
+  m+=`\n---\n${AR?'وُلّد محليًا بالكامل بواسطة Footprint Guard. لا خوادم وسيطة، لا تخزين، لا تتبّع.':'Generated entirely on-device by Footprint Guard. No intermediary servers, no storage, no tracking.'}\n`;
+  return m;
+}
+function printReport(r){
+  const tierTxt={safe:'SAFE (0-20)',low:'LOW (21-45)',moderate:'MODERATE (46-70)',critical:'CRITICAL (71-100)'}[r.risk.tier];
+  const col={safe:'#027A48',low:'#027A48',moderate:'#B54708',critical:'#D92D20'}[r.risk.tier];
+  $('printReport').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.6px solid #111318;padding-bottom:10px">
+    <div><h1>FOOTPRINT GUARD</h1><div class="small">Digital Footprint & Social Engineering Exposure Report</div></div>
+    <div style="text-align:right"><div class="score" style="color:${col}">${r.risk.score}/100</div><div style="color:${col};font-weight:700;font-size:10px">${tierTxt}</div></div>
+  </div>
+  ${r.mock?'<p style="color:#B54708;font-weight:700;font-size:10px;margin-top:8px">NOTICE: Mock Audit Mode — simulated data.</p>':''}
+  <h2>Audit Summary</h2>
+  <table><tr><th style="width:34%">Field</th><th>Value</th></tr>
+  <tr><td>Audited identity (redacted)</td><td>${esc(r.redacted)}</td></tr>
+  <tr><td>Input type</td><td>${r.kind}</td></tr>
+  <tr><td>Breach component</td><td>${r.risk.bc.toFixed(1)} / 75</td></tr>
+  <tr><td>Registered-platforms penalty</td><td>${r.risk.pp.toFixed(1)} / 25</td></tr>
+  <tr><td>Pwned-password penalty</td><td>${r.risk.pwp.toFixed(1)} / 10</td></tr>
+  <tr><td>Formula</td><td>Score = sum(DataTypeWeight x RecencyFactor) + Platforms + Password (max 100)</td></tr></table>
+  <h2>Exposure Breakdown</h2>
+  <table><tr><th>Data type</th><th>Breaches</th><th>Weighted</th></tr>
+  ${r.risk.breakdown.map(e=>`<tr><td style="${e.count?'color:#D92D20;font-weight:700':'color:#5A6068'}">${e.dc}</td><td>${e.count}</td><td>${e.weighted.toFixed(1)}</td></tr>`).join('')}</table>
+  <h2>Breach Timeline (${r.breaches.length})</h2>
+  ${r.breaches.map(b=>`<div style="border-left:2.5px solid ${b.sensitive?'#D92D20':'#98A2B3'};padding-left:10px;margin-bottom:10px"><b>${esc(b.title)}</b> — ${b.date}<br><span class="small">${esc(b.domain||'—')} · ${b.count} accounts · ${b.verified?'verified':'unverified'}${b.sensitive?' · SENSITIVE':''}</span><br><span style="font-size:10px">Exposed: ${b.dc.join(', ')}</span></div>`).join('')||'<p class="small">No breaches.</p>'}
+  <h2>Discovered Public Accounts (${r.found.length} of ${r.hits.length})</h2>
+  <p class="small"><i>Usernames are not unique identities; verify each hit manually.</i></p>
+  ${r.found.map(h=>`<div style="font-size:10px;margin:3px 0"><b>${esc(h.platform.name)}</b> (${h.platform.category} · ${h.platform.reliability}) — ${esc(h.url)}</div>`).join('')}
+  ${r.pwRes?`<h2>Password Check (k-Anonymity)</h2><p style="font-size:10.5px">Only the 5-character SHA-1 prefix (${r.pwRes.prefix}) was transmitted. Result: ${r.pwRes.found?`<b>PWNED — seen ${r.pwRes.count} times</b>`:'not found in known corpora'}.</p>`:''}
+  <h2>Remediation Plan</h2>
+  ${r.plan.map((st,i)=>`<div class="rem ${st.priority==='critical'?'crit':''}"><b style="font-size:11px">${i+1}. [${st.priority.toUpperCase()}] ${esc(st.tEn)} (~${st.mins} min)</b><div class="small" style="margin-left:14px">${esc(st.bEn)}</div></div>`).join('')}
+  <p class="small" style="margin-top:16px">Generated entirely on-device by Footprint Guard. No intermediary servers, no storage, no tracking. Sources: Have I Been Pwned, public platform profile pages.</p>`;
+  window.print();
+}
+
+/* ---- Wire up ---- */
+$('auditInput').addEventListener('input',updateKind);
+$('auditInput').addEventListener('keydown',e=>{if(e.key==='Enter')runAudit();});
+$('goBtn').addEventListener('click',runAudit);
+$('pwBtn').addEventListener('click',pwCheck);
+$('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')pwCheck();});
+$('newAuditBtn').addEventListener('click',()=>{RESULT=null;$('results').classList.add('hidden');$('hero').classList.remove('hidden');document.documentElement.style.setProperty('--glow','rgba(0,255,163,.10)');window.scrollTo({top:0,behavior:'smooth'});});
+$('mockToggle').addEventListener('change',e=>{MOCK=e.target.checked;applyLang();});
+$('langToggle').addEventListener('click',()=>{AR=!AR;applyLang();});
+$('chipAr').addEventListener('click',()=>{AR=true;applyLang();});
+$('chipEn').addEventListener('click',()=>{AR=false;applyLang();});
+$('btnMd').addEventListener('click',()=>{if(!RESULT)return;const blob=new Blob([buildMarkdown(RESULT)],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='footprint-guard-report.md';a.click();URL.revokeObjectURL(a.href);toast(S('downloadDone'));});
+$('btnCopyMd').addEventListener('click',async()=>{if(!RESULT)return;await navigator.clipboard.writeText(buildMarkdown(RESULT));toast(S('copied'));});
+$('btnPdf').addEventListener('click',()=>{if(RESULT)printReport(RESULT);});
+applyLang();
+</script>
+</body>
+</html>

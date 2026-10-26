@@ -1,0 +1,37 @@
+# Footprint Guard — misc
+*.log
+*.DS_Store
+.DS_Store
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+.flutter
+# NOTE: .metadata IS version-controlled (Flutter tool requires it).
+
+# Android
+**/android/local.properties
+local.properties
+*.jks
+*.keystore
+key.properties
+/captures/
+.gradle/
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+
+# Generated artefacts that must never be committed
+*.apk
+*.aab
+*.zip
+
+# Node tooling
+node_modules/
