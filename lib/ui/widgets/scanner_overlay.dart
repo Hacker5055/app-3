@@ -74,7 +74,7 @@ class _ScannerOverlayState extends State<ScannerOverlay>
                         children: [
                           CustomPaint(
                             size: const Size(168, 168),
-                            painter: _RadarPainter(repaint: _ctrl),
+                            painter: _RadarPainter(animation: _ctrl),
                           ),
                           const Icon(FGI.crosshair,
                               size: 22, color: FGColors.emerald),
@@ -157,11 +157,11 @@ class _ScannerOverlayState extends State<ScannerOverlay>
 }
 
 class _RadarPainter extends CustomPainter {
-  _RadarPainter({required Animation<double> repaint}) : super(repaint: repaint);
+  final Animation<double> animation;
+  _RadarPainter({required this.animation}) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final animation = repaint as Animation<double>;
     final center = Offset(size.width / 2, size.height / 2);
     final maxR = size.width / 2 - 4;
 

@@ -55,13 +55,13 @@ class FGTheme {
       splashColor: const Color(0x14FFFFFF),
       highlightColor: const Color(0x0DFFFFFF),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith(
-          (s) => s.contains(MaterialState.selected)
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
               ? FGColors.emerald
               : FGColors.textMid,
         ),
-        trackColor: MaterialStateProperty.resolveWith(
-          (s) => s.contains(MaterialState.selected)
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
               ? const Color(0x3300FFA3)
               : const Color(0x26FFFFFF),
         ),
